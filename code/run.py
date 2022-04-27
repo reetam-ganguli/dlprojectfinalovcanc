@@ -22,6 +22,8 @@ from autoencoders import (
     convolutional_autoencoder,
 )
 
+from gru import gru_model
+
 from xgboost import XGBClassifier
 from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
 from sklearn.linear_model import LogisticRegression
@@ -124,45 +126,45 @@ def main():
         except RuntimeError as e:
             print(e)
 
-    print("===== loading omics data =====")
-    omics_data = pd.read_csv(ARGS.omics_data, index_col=0).T.astype("float32")
-    (num_patients, num_features) = omics_data.shape
-    print(
-        "{} contains {} patients with {} features".format(
-            ARGS.omics_data.split("/")[-1], num_patients, num_features
-        )
-    )            
+    # print("===== loading omics data =====")
+    # omics_data = pd.read_csv(ARGS.omics_data, index_col=0).T.astype("float32")
+    # (num_patients, num_features) = omics_data.shape
+    # print(
+    #     "{} contains {} patients with {} features".format(
+    #         ARGS.omics_data.split("/")[-1], num_patients, num_features
+    #     )
+    # )            
 
-    checkpoint_path = (
-        "./output"
-        + os.sep
-        + "{}_{}_{}".format(timestamp, ARGS.autoencoder_model, ARGS.omics_data.split("/")[-1][:-4])
-        + os.sep
-        + "checkpoints"
-    )
-    logs_path = (
-        "./output"
-        + os.sep
-        + "{}_{}_{}".format(timestamp, ARGS.autoencoder_model, ARGS.omics_data.split("/")[-1][:-4])
-        + os.sep
-        + "logs"
-    )
+    # checkpoint_path = (
+    #     "./output"
+    #     + os.sep
+    #     + "{}_{}_{}".format(timestamp, ARGS.autoencoder_model, ARGS.omics_data.split("/")[-1][:-4])
+    #     + os.sep
+    #     + "checkpoints"
+    # )
+    # logs_path = (
+    #     "./output"
+    #     + os.sep
+    #     + "{}_{}_{}".format(timestamp, ARGS.autoencoder_model, ARGS.omics_data.split("/")[-1][:-4])
+    #     + os.sep
+    #     + "logs"
+    # )
 
-    if not ARGS.no_save:
-        print("checkpoint file saved at {}".format(checkpoint_path))
-        print("log file save as {}".format(logs_path))
+    # if not ARGS.no_save:
+    #     print("checkpoint file saved at {}".format(checkpoint_path))
+    #     print("log file save as {}".format(logs_path))
 
-    logs_path = os.path.abspath(logs_path)
-    checkpoint_path = os.path.abspath(checkpoint_path)
+    # logs_path = os.path.abspath(logs_path)
+    # checkpoint_path = os.path.abspath(checkpoint_path)
 
-    if (
-        not os.path.exists(checkpoint_path)
-        and not os.path.exists(logs_path)
-        and ARGS.train_autoencoder
-    ):
-        os.makedirs(checkpoint_path)
-        os.makedirs(logs_path)
-
+    # if (
+    #     not os.path.exists(checkpoint_path)
+    #     and not os.path.exists(logs_path)
+    #     and ARGS.train_autoencoder
+    # ):
+    #     os.makedirs(checkpoint_path)
+    #     os.makedirs(logs_path)
+    num_features = 206
     if ARGS.autoencoder_model == "vanilla":
         autoencoder = vanilla_autoencoder(
             latent_dim=hp.latent_dim,
@@ -244,7 +246,7 @@ def main():
                 "{} contains {} patients with {} features".format(
                     ARGS.merged_data.split("/")[-1],
                     merged_df.shape[0],
-                    merged_df.shape[1] - 1,
+                    merged_df.shape[1],
                 )
             )
             X, Y = merged_df.iloc[:, :-1], merged_df.iloc[:, -1]
@@ -366,6 +368,20 @@ def main():
                 X_omics.numpy().reshape(-1, hp.latent_dim),
                 Y.numpy().reshape(-1,),
             )
+        elif ARGS.classifier_data == "encoded_merged":
+            merged_df = pd.read_csv(ARGS.merged_data, index_col=0).astype("float32")
+            dropped_df = merged_df.drop(columns=["treatment_outcome_first_course_x", 'RECURRENCE', 'ADJUVANT', "pharmaceutical_tx_started_days_to_x", "pharmaceutical_tx_ongoing_indicator", "pharmaceutical_tx_ended_days_to"], inplace=False)
+            print(
+                "{} contains merged/encoded data for {} patients with {} features".format(
+                    ARGS.merged_data.split("/")[-1],
+                    dropped_df.shape[0],
+                    dropped_df.shape[1] - 1,
+                )
+            )
+            X = dropped_df
+            Y = merged_df['RECURRENCE']
+            tf.convert_to_tensor(X)
+            tf.convert_to_tensor(Y)
         else:
             sys.exit("wrong classifier data!")
 
@@ -426,7 +442,15 @@ def main():
                     ),
                     dpi=300,
                 )
-
+        elif ARGS.classifier_model == 'gru':
+            gru = gru_model
+            gru.compile(loss="binary_crossentropy", optimizer='adam', metrics=['accuracy', tf.keras.metrics.AUC()])
+            reshaped_x = tf.reshape(X_train, (-1, 1, 206))
+            reshaped_x_test = tf.reshape(X_test, (-1, 1, 206))
+            print(tf.shape(reshaped_x))
+            gru.fit(reshaped_x, y_train)
+            print(gru.evaluate(reshaped_x_test, y_test))
+            #print("Acc for gru: {:.2f}".format(gru_model.evaluate(reshaped_x_test, y_test)))
         else:
             sys.exit("Wrong model or not implemented yet for classifier!")
 
@@ -434,3 +458,4 @@ def main():
 if __name__ == "__main__":
     ARGS = parse_args()
     main()
+
