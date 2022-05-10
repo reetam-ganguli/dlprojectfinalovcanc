@@ -1,6 +1,7 @@
-# DOPE
+# Tumor Predictiors
 
-This repo contains scripts for DOPE model in *paper name*. The data acquisition methods as well as model architecture details are also described below.
+This repo contains scripts for our DL final project models. We are estimating whether a given ovarian cancer is recurrent or not using clinical and epigenomic. By training on these definitively labelled cases of where the tumor has been labelled as recurrent or not by trained medical staff, the hope is that our model can then prospectively look at patient data prospectively, in the future, to predict whether they are likely to have a recurrent ovarian tumor at the point of care, using epigenomic and point-of-care clinical history features.
+
 
 
 ## Environment Setup
@@ -22,7 +23,5 @@ As the dataset provided will exceed the limitation of Github file size, we will 
 
 
 ## Data
-
-### Biomed-clinical data
-
-### Multi-omics data
+TCGA Ovarian Cancer 
+ 
