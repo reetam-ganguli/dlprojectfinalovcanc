@@ -34,14 +34,3 @@ conv_gru_model = tf.keras.Sequential(
         tf.keras.layers.Dense(1, activation='sigmoid')
     ]
 )
-
-conv_model = tf.keras.Sequential(
-    [
-        tf.keras.layers.Reshape((103, 2)),
-        tf.keras.layers.Conv1D(9, 5, input_shape=(103, 2)),
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(100, activation='relu'),
-        tf.keras.layers.Dropout(0.2),
-        tf.keras.layers.Dense(1, activation='sigmoid')
-    ]
-)
