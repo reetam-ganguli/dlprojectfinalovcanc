@@ -1,6 +1,7 @@
 ## File organization
->most fiels here are creating the data frames in joining the methylation, mrna, and CNV (copy number variation) data vs the methylation, RNE sequencing, and CNV (copy number variation)  sequencing to the biomedical and clinical dataframes, as well as training the autoencoders
->The most important files in actually training our DL modls (along with Ml baselines) are:DL Model: Grid Searched Fully Connected Neural Net and Dl Model: CNN
+>most files here are creating the data frames in joining the methylation, mrna, and CNV (copy number variation) data vs the methylation, RNE sequencing, and CNV (copy number variation)  sequencing to the biomedical and clinical dataframes, as well as training the autoencoders. They can be, for the most part, ignored.
+>
+>The most important files in actually training our DL models (along with ML baselines) are:DL Model: Grid Searched Fully Connected Neural Net ,  DL Model: CNN, and Dl Model: GRU
 ## Requirements
 
 > 🚧 The patients in biomed-clinical data is represented by bcr_patient_uuid
